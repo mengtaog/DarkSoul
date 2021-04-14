@@ -112,6 +112,51 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1 &84469114
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 84469115}
+  - component: {fileID: 84469116}
+  m_Layer: 0
+  m_Name: sensor
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &84469115
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 84469114}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 987267313}
+  m_RootOrder: 1
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &84469116
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 84469114}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 03d47bc4b61157c458d85b62f35a7745, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  capsule: {fileID: 987267310}
+  offset: -0.1
 --- !u!1 &170076733
 GameObject:
   m_ObjectHideFlags: 0
@@ -268,13 +313,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 534669902}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 1, z: -10}
+  m_LocalRotation: {x: 0.11525738, y: -0, z: -0, w: 0.99333566}
+  m_LocalPosition: {x: 0, y: 4.25, z: -15.18}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 13.237, y: 0, z: 0}
 --- !u!1 &850615785
 GameObject:
   m_ObjectHideFlags: 0
@@ -287,7 +332,7 @@ GameObject:
   - component: {fileID: 850615788}
   - component: {fileID: 850615787}
   - component: {fileID: 850615786}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Plane
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -362,7 +407,7 @@ Transform:
   m_GameObject: {fileID: 850615785}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 3, y: 1, z: 3}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 2
@@ -441,7 +486,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   model: {fileID: 502377486}
   walkSpeed: 1.4
-  runSpeed: 2
+  runSpeed: 2.7
+  jumpVelocity: 4
+  rollVelocity: 4
+  pi: {fileID: 987267309}
+  _lockplanar: 0
 --- !u!33 &987267312
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -458,10 +507,11 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 987267308}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: 0.68, z: -9.01}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 502377487}
+  - {fileID: 84469115}
   m_Father: {fileID: 0}
   m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -558,7 +608,7 @@ GameObject:
   - component: {fileID: 1958915506}
   - component: {fileID: 1958915505}
   - component: {fileID: 1958915504}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Cube
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -630,10 +680,10 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1958915503}
-  m_LocalRotation: {x: -0.107486725, y: -0, z: -0, w: 0.99420655}
-  m_LocalPosition: {x: 0.6326685, y: 0.27, z: 7.02}
-  m_LocalScale: {x: 8.488, y: 0.54732, z: 10.161}
+  m_LocalRotation: {x: -0.27376074, y: -0, z: -0, w: 0.96179783}
+  m_LocalPosition: {x: 0.6326685, y: 2, z: -2.31}
+  m_LocalScale: {x: 8.488, y: 0.54732, z: 18.898066}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 4
-  m_LocalEulerAnglesHint: {x: -12.341001, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: -31.776001, y: 0, z: 0}
