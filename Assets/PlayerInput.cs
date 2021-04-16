@@ -10,21 +10,33 @@ public class PlayerInput : MonoBehaviour
     public string keyDown = "s";
     public string keyLeft = "a";
     public string keyRight = "d";
+    public string keyAttack;
     public string keyRun;
     public string keyJump;
-
+    public string keyRoll;
+    public string keyJab;
+    public string keyJRight;
+    public string keyJLeft;
+    public string keyJUp;
+    public string keyJDown;
 
     [Header("====== Pressing Signals ======")]
     public bool run;
 
     [Header("====== Trigger Signals ======")]
     public bool jump;
+    public bool roll;
+    public bool jab;
+    public bool attack;
 
     [Header("====== Output Signals ======")]
     public float dUp;
     public float dRight;
     public float dMag; 
     public Vector3 dVec; //人物目标朝向
+
+    public float jUp;
+    public float jRight;
 
     [Header("====== Others ======")]
     public bool inputEnabled = true;
@@ -44,6 +56,8 @@ public class PlayerInput : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        jUp = (Input.GetKey(keyJUp) ? 1.0f : 0) - (Input.GetKey(keyJDown) ? 1.0f : 0);
+        jRight = (Input.GetKey(keyJRight) ? 1.0f : 0) - (Input.GetKey(keyJLeft) ? 1.0f : 0);
         _targetDUp = (Input.GetKey(keyUp) ? 1.0f : 0) - (Input.GetKey(keyDown) ? 1.0f : 0);
         _targetDRight = (Input.GetKey(keyRight) ? 1.0f : 0) - (Input.GetKey(keyLeft) ? 1.0f : 0);
 
@@ -68,6 +82,9 @@ public class PlayerInput : MonoBehaviour
 
         run = Input.GetKey(keyRun);
         jump = Input.GetKeyDown(keyJump);
+        roll = Input.GetKeyDown(keyRoll);
+        jab = Input.GetKeyDown(keyJab);
+        attack = Input.GetKeyDown(keyAttack);
     }
 
     private Vector2 SquareToCircle(Vector2 input)
