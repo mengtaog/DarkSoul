@@ -10,8 +10,9 @@ public class ActorController : MonoBehaviour
     public float jumpVelocity;
     public float rollVelocity;
     public float jabVelocity;
-    public PlayerInput pi;
+    public IUserInput pi;
     public bool _lockplanar = false;
+    public CameraController camcon;
 
     [Header("====== Friction Settings ======")]
     public PhysicMaterial frictionOne;
@@ -28,7 +29,15 @@ public class ActorController : MonoBehaviour
     // Start is called before the first frame update
     private void Awake()
     {
-        pi = GetComponent<PlayerInput>();
+        IUserInput[] inputs = GetComponents<IUserInput>();
+        foreach (var input in inputs)
+        {
+            if (input.enabled)
+            {
+                pi = input;
+                break;
+            }
+        }
         _anim = model.GetComponent<Animator>();
         _rigbody = GetComponent<Rigidbody>();
         _capsuleCollider = GetComponent<CapsuleCollider>();
@@ -37,29 +46,47 @@ public class ActorController : MonoBehaviour
     // Update is called once per frame
     private void Update()
     {
-        //animation
+        //press signal
         _anim.SetFloat("forward", Mathf.Lerp(_anim.GetFloat("forward"), pi.dMag * (pi.run ? 2.0f : 1.0f), 0.4f));
+        _anim.SetBool("defense", pi.defense);
 
-        //press trigger
-        if (pi.jump)
+        if (pi.lockOn) camcon.LockUnLock();
+
+        if (CheckAnimatorState("idle", "Attack")) //operate only when idle
         {
-            _anim.SetTrigger("jump");
-            _canAttack = false;
+            if (pi.jump)
+            {
+                _anim.SetTrigger("jump");
+                _canAttack = false;
+            }
+            if (pi.roll) _anim.SetTrigger("roll");
+            if (pi.jab) _anim.SetTrigger("jab");
         }
-        if (pi.roll) _anim.SetTrigger("roll");
-        if (pi.jab) _anim.SetTrigger("jab");
+        
+        
+
         if (pi.attack && CheckAnimatorState("ground") && _canAttack) _anim.SetTrigger("attack");
 
-        if(pi.dMag > 0.01f)
+
+        if (camcon.lockState == false)
         {
-            Vector3 targetForward = Vector3.Slerp(model.transform.forward, pi.dVec, 0.3f);
-            model.transform.forward = targetForward;
+            if(pi.dMag > 0.01f)
+            {
+                Vector3 targetForward = Vector3.Slerp(model.transform.forward, pi.dVec, 0.3f);
+                model.transform.forward = targetForward;
+            }
+
+            if (!_lockplanar)
+            {
+                _planarVector = pi.dMag * model.transform.forward * walkSpeed * (pi.run ? runSpeed : 1.0f);
+            }
+        }
+        else
+        {
+            model.transform.forward = transform.forward;
+            if (!_lockplanar) _planarVector = pi.dVec * walkSpeed * (pi.run ? runSpeed : 1.0f);
         }
 
-        if (!_lockplanar)
-        {
-            _planarVector = pi.dMag * model.transform.forward * walkSpeed * (pi.run ? runSpeed : 1.0f);
-        }
             
     }
 
@@ -118,8 +145,8 @@ public class ActorController : MonoBehaviour
 
     public void OnRollEnter()
     {
-        
-        _planarVector = model.transform.forward * rollVelocity;
+        if (pi.dVec.magnitude > 0.1f) _planarVector = pi.dVec.normalized * rollVelocity;
+        else _planarVector = model.transform.forward * rollVelocity;
         _lockplanar = true;
         pi.inputEnabled = false;
     }
