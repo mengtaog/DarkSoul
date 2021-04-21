@@ -29,12 +29,13 @@ public abstract class IUserInput : MonoBehaviour
     public bool roll;
     public bool jab;
     public bool attack;
+    public bool leftAttack;
     public bool lockOn;
 
     [Header("====== Output Signals ======")]
     public float dUp;
     public float dRight;
-    public float dMag;
+    public float dMag; 
     public Vector3 dVec; //人物目标朝向
 
     public float jUp;
@@ -55,5 +56,11 @@ public abstract class IUserInput : MonoBehaviour
         output.x = input.x * Mathf.Sqrt(1.0f - (input.y * input.y) / 2.0f);
         output.y = input.y * Mathf.Sqrt(1.0f - (input.x * input.x) / 2.0f);
         return output;
+    }
+
+    protected void UpdateDmagDvec(float dUp2, float dRight2)
+    {
+        dMag = Mathf.Sqrt(dUp2 * dUp2 + dRight2 * dRight2);
+        dVec = transform.right * dRight2 + transform.forward * dUp2;
     }
 }

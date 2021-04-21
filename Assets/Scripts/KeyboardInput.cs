@@ -11,6 +11,7 @@ public class KeyboardInput : IUserInput
     public string keyLeft = "a";
     public string keyRight = "d";
     public string keyAttack;
+    public string keyLeftAttck;
     public string keyDefense;
     public string keyRun;
     public string keyJump;
@@ -87,15 +88,15 @@ public class KeyboardInput : IUserInput
         
         float dUp2 = tmpD.x;
         float dRight2 = tmpD.y;
-        
-        dMag = Mathf.Sqrt(dUp2 * dUp2 + dRight2 * dRight2);
-        dVec = transform.right * dRight2 + transform.forward * dUp2;
+
+        UpdateDmagDvec(dUp2, dRight2);
 
         run = Input.GetKey(keyRun);
         jump = Input.GetKeyDown(keyJump);
         roll = Input.GetKeyDown(keyRoll);
         jab = Input.GetKeyDown(keyJab);
         attack = Input.GetKeyDown(keyAttack);
+        leftAttack = Input.GetKeyDown(keyLeftAttck);
         defense = Input.GetKey(keyDefense);
         lockOn = Input.GetKeyDown(keyLockOn);
     }

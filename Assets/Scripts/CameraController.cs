@@ -11,13 +11,15 @@ public class CameraController : MonoBehaviour
     public float CameraDamp;
     public Image lockDot;
     public bool lockState = false;
+    public bool isAi = false;
+
     private GameObject _playerHandle;
     private GameObject _cameraHandle;
     private GameObject _camera;
     private GameObject _model;
     private Vector3 _modelEuler;
     private Vector3 _cameraDampVelocity;
-    private GameObject _lockTarget;
+    private LockTarget _lockTarget;
     
     private float _tmpEulerX;
     // Start is called before the first frame update
@@ -25,11 +27,26 @@ public class CameraController : MonoBehaviour
     {
         _cameraHandle = transform.parent.gameObject;
         _playerHandle = _cameraHandle.transform.parent.gameObject;
-        _camera = Camera.main.gameObject;
         _model = _playerHandle.GetComponent<ActorController>().model;
         _tmpEulerX = 20f;
-        Cursor.lockState = CursorLockMode.Locked;
-        lockDot.enabled = false;
+        if (!isAi)
+        {
+            _camera = Camera.main.gameObject;
+            lockDot.enabled = false;
+            Cursor.lockState = CursorLockMode.Locked;
+        }
+    }
+
+    private void Update()
+    {
+        if(_lockTarget != null)
+        {
+            lockDot.rectTransform.position = Camera.main.WorldToScreenPoint(_lockTarget.obj.transform.position + new Vector3(0, _lockTarget.halfHeight, 0));
+            if(Vector3.Distance(_model.transform.position, _lockTarget.obj.transform.position) > 10.0f)
+            {
+                LockUnLock();
+            }
+        }
     }
 
     // Update is called once per frame
@@ -45,31 +62,33 @@ public class CameraController : MonoBehaviour
         }
         else
         {
-            Vector3 tmpForward = _lockTarget.transform.position - _model.transform.position;
+            Vector3 tmpForward = _lockTarget.obj.transform.position - _model.transform.position;
             tmpForward.y = 0;
             _playerHandle.transform.forward = tmpForward;
+            _cameraHandle.transform.LookAt(_lockTarget.obj.transform);
         }
 
-
-        _camera.transform.position = Vector3.SmoothDamp(_camera.transform.position, transform.position, ref _cameraDampVelocity, CameraDamp);
-        //_camera.transform.eulerAngles = transform.eulerAngles;
-        _camera.transform.LookAt(_cameraHandle.transform);
+        if (!isAi)
+        {
+            _camera.transform.position = Vector3.SmoothDamp(_camera.transform.position, transform.position, ref _cameraDampVelocity, CameraDamp);
+            //_camera.transform.eulerAngles = transform.eulerAngles;
+            _camera.transform.LookAt(_cameraHandle.transform);
+        }
     }
 
     public void LockUnLock()
     {
-        
         if(_lockTarget == null)
         {
             //to lock sth
             Vector3 center = _model.transform.position + new Vector3(0, 1, 0);
             Vector3 boxCenter = center + _model.transform.forward * 5f;
-            Collider[] colliders = Physics.OverlapBox(center, new Vector3(0.5f, 0.5f, 10.0f), _model.transform.rotation, LayerMask.GetMask("Enemy"));
+            Collider[] colliders = Physics.OverlapBox(center, new Vector3(0.5f, 0.5f, 10.0f), _model.transform.rotation, LayerMask.GetMask(isAi ? "Player" :"Enemy"));
             foreach (var col in colliders)
             {
-                print(col);
-                lockDot.enabled = true;
-                _lockTarget = col.gameObject;
+                //print(col);
+                if(!isAi) lockDot.enabled = true;
+                _lockTarget = new LockTarget(col.gameObject, col.bounds.extents.y);
                 lockState = true;
                 break;
             }
@@ -80,6 +99,18 @@ public class CameraController : MonoBehaviour
             _lockTarget = null;
             lockDot.enabled = false;
             lockState = false;
+        }
+    }
+
+    private class LockTarget
+    {
+        public GameObject obj;
+        public float halfHeight;
+
+        public LockTarget(GameObject gameObject, float halfH)
+        {
+            obj = gameObject;
+            halfHeight = halfH;
         }
     }
 }

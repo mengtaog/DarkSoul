@@ -11,7 +11,7 @@ public class ActorController : MonoBehaviour
     public float rollVelocity;
     public float jabVelocity;
     public IUserInput pi;
-    public bool _lockplanar = false;
+    
     public CameraController camcon;
 
     [Header("====== Friction Settings ======")]
@@ -26,6 +26,10 @@ public class ActorController : MonoBehaviour
     private Collider _capsuleCollider;
     private float _lerpTarget;
     private Vector3 _deltaPos;
+    private bool _lockplanar = false; //锁定速度
+    private bool _trackDirection = false; //锁定方向
+    //private bool _rightHand = true;
+    private bool _leftShield = true;
     // Start is called before the first frame update
     private void Awake()
     {
@@ -46,12 +50,24 @@ public class ActorController : MonoBehaviour
     // Update is called once per frame
     private void Update()
     {
-        //press signal
-        _anim.SetFloat("forward", Mathf.Lerp(_anim.GetFloat("forward"), pi.dMag * (pi.run ? 2.0f : 1.0f), 0.4f));
+        //
+        if (camcon.lockState == false)
+        {
+            _anim.SetFloat("forward", Mathf.Lerp(_anim.GetFloat("forward"), pi.dMag * (pi.run ? 2.0f : 1.0f), 0.4f));
+            _anim.SetFloat("right", 0f);
+        }
+        else
+        {
+            Vector3 localVector = transform.InverseTransformVector(pi.dVec);
+            _anim.SetFloat("forward", localVector.z * (pi.run ? 2.0f : 1.0f));
+            //print(pi.dVec.x);
+            _anim.SetFloat("right", localVector.x * (pi.run ? 2.0f : 1.0f));
+        }
         _anim.SetBool("defense", pi.defense);
 
         if (pi.lockOn) camcon.LockUnLock();
 
+        /*
         if (CheckAnimatorState("idle", "Attack")) //operate only when idle
         {
             if (pi.jump)
@@ -62,11 +78,29 @@ public class ActorController : MonoBehaviour
             if (pi.roll) _anim.SetTrigger("roll");
             if (pi.jab) _anim.SetTrigger("jab");
         }
-        
-        
+        */
+        if (pi.jump)
+        {
+            _anim.SetTrigger("jump");
+            _canAttack = false;
+        }
+        if (pi.roll) _anim.SetTrigger("roll");
+        if (pi.jab) _anim.SetTrigger("jab");
 
-        if (pi.attack && CheckAnimatorState("ground") && _canAttack) _anim.SetTrigger("attack");
+        if ((pi.attack || pi.leftAttack) && (CheckAnimatorState("ground") || CheckAnimatorStateTag("attack")) && _canAttack)
+        {
+            if (pi.leftAttack) _anim.SetBool("R0L1", true);
+            else _anim.SetBool("R0L1", false);
+            _anim.SetTrigger("attack");
+        }
 
+        if (CheckAnimatorState("ground") && _leftShield)
+        {
+            if(pi.defense)
+                _anim.SetLayerWeight(_anim.GetLayerIndex("Defense"), 1.0f);
+            else _anim.SetLayerWeight(_anim.GetLayerIndex("Defense"), 0f);
+        }
+        else _anim.SetLayerWeight(_anim.GetLayerIndex("Defense"), 0f);
 
         if (camcon.lockState == false)
         {
@@ -83,7 +117,11 @@ public class ActorController : MonoBehaviour
         }
         else
         {
-            model.transform.forward = transform.forward;
+            if(!_trackDirection) model.transform.forward = transform.forward;
+            else
+            {
+                model.transform.forward = _planarVector.normalized;
+            }
             if (!_lockplanar) _planarVector = pi.dVec * walkSpeed * (pi.run ? runSpeed : 1.0f);
         }
 
@@ -106,12 +144,19 @@ public class ActorController : MonoBehaviour
         return _anim.GetCurrentAnimatorStateInfo(layerIndex).IsName(state);
     }
 
+    private bool CheckAnimatorStateTag(string tag, string layer = "Base Layer")
+    {
+        int layerIndex = _anim.GetLayerIndex(layer);
+        return _anim.GetCurrentAnimatorStateInfo(layerIndex).IsTag(tag);
+    }
+
     #region handle messages
     public void OnJumpEnter()
     {
         _thrustVector = new Vector3(0, jumpVelocity, 0);
         _lockplanar = true;
         pi.inputEnabled = false;
+        _trackDirection = true;
     }
 
     public void OnJumpExit()
@@ -135,6 +180,7 @@ public class ActorController : MonoBehaviour
         _lockplanar = false;
         _canAttack = true;
         pi.inputEnabled = true;
+        _trackDirection = false;
     }
 
     public void OnFallingEnter()
@@ -149,6 +195,7 @@ public class ActorController : MonoBehaviour
         else _planarVector = model.transform.forward * rollVelocity;
         _lockplanar = true;
         pi.inputEnabled = false;
+        _trackDirection = true;
     }
 
     public void OnGroundExit()
@@ -168,42 +215,43 @@ public class ActorController : MonoBehaviour
         _thrustVector = model.transform.forward * _anim.GetFloat("jabVelocity");
     }
 
-    public void OnAttackIdleEnter()
-    {
-        //fdsgfsgd _anim.SetLayerWeight(_anim.GetLayerIndex("Attack"), 0f);
-        _lerpTarget = 0f;
-        pi.inputEnabled = true;
-    }
-
-    public void OnAttackIdleUpdate()
-    {
-        float currentWeight = _anim.GetLayerWeight(_anim.GetLayerIndex("Attack"));
-        currentWeight = Mathf.Lerp(currentWeight, _lerpTarget, 0.2f);
-        _anim.SetLayerWeight(_anim.GetLayerIndex("Attack"), currentWeight);
-    }
 
     public void OnAttackEnter()
     {
-        _lerpTarget = 1.0f;
+        //_lerpTarget = 1.0f;
         //_planarVector = model.transform.forward * rollVelocity;
         pi.inputEnabled = false;
     }
 
     public void OnAttackUpdate()
     {
-        float currentWeight = _anim.GetLayerWeight(_anim.GetLayerIndex("Attack"));
-        currentWeight = Mathf.Lerp(currentWeight, _lerpTarget, 0.2f);
-        _anim.SetLayerWeight(_anim.GetLayerIndex("Attack"), currentWeight);
+        //float currentWeight = _anim.GetLayerWeight(_anim.GetLayerIndex("Attack"));
+        //currentWeight = Mathf.Lerp(currentWeight, _lerpTarget, 0.2f);
+        //_anim.SetLayerWeight(_anim.GetLayerIndex("Attack"), currentWeight);
         _thrustVector = model.transform.forward * _anim.GetFloat("attack1hAVelocity");
     }
 
     public void UpdateRootMotion(object deltaPos)
     {
-        if(CheckAnimatorState("attack1hC", "Attack"))
+        if(CheckAnimatorState("attack1hC"))
         {
             _deltaPos += (Vector3)deltaPos;
         }
         
     }
+
+    public void OnHitEnter()
+    {
+        _planarVector = Vector3.zero;
+        pi.inputEnabled = false;
+
+    }
+
+    public void IssueTrigger(string triggerName)
+    {
+        _anim.SetTrigger(triggerName);
+    }
     #endregion
+
+   
 }

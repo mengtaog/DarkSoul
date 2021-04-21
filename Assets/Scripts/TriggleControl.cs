@@ -13,7 +13,6 @@ public class TriggleControl : MonoBehaviour
     // Start is called before the first frame update
     public void ResetTrigger(string triggerName)
     {
-  
         _anim.ResetTrigger(triggerName);
     }
 }
