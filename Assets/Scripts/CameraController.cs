@@ -33,7 +33,7 @@ public class CameraController : MonoBehaviour
         {
             _camera = Camera.main.gameObject;
             lockDot.enabled = false;
-            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.lockState = CursorLockMode.None;
         }
     }
 
@@ -41,11 +41,13 @@ public class CameraController : MonoBehaviour
     {
         if(_lockTarget != null)
         {
+            //print(_lockTarget.obj);
             lockDot.rectTransform.position = Camera.main.WorldToScreenPoint(_lockTarget.obj.transform.position + new Vector3(0, _lockTarget.halfHeight, 0));
             if(Vector3.Distance(_model.transform.position, _lockTarget.obj.transform.position) > 10.0f)
             {
                 LockUnLock();
             }
+            if (_lockTarget.am != null && _lockTarget.am.sm.isDie) LockUnLock();
         }
     }
 
@@ -106,11 +108,13 @@ public class CameraController : MonoBehaviour
     {
         public GameObject obj;
         public float halfHeight;
+        public ActorManager am;
 
         public LockTarget(GameObject gameObject, float halfH)
         {
             obj = gameObject;
             halfHeight = halfH;
+            am = obj.GetComponent<ActorManager>();
         }
     }
 }

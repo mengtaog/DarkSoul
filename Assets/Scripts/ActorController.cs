@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class ActorController : MonoBehaviour
 {
+    public ActorManager am;
     public GameObject model;
     public float walkSpeed;
     public float runSpeed;
@@ -11,7 +12,7 @@ public class ActorController : MonoBehaviour
     public float rollVelocity;
     public float jabVelocity;
     public IUserInput pi;
-    
+
     public CameraController camcon;
 
     [Header("====== Friction Settings ======")]
@@ -45,6 +46,7 @@ public class ActorController : MonoBehaviour
         _anim = model.GetComponent<Animator>();
         _rigbody = GetComponent<Rigidbody>();
         _capsuleCollider = GetComponent<CapsuleCollider>();
+        am = GetComponent<ActorManager>();
     }
 
     // Update is called once per frame
@@ -63,7 +65,8 @@ public class ActorController : MonoBehaviour
             //print(pi.dVec.x);
             _anim.SetFloat("right", localVector.x * (pi.run ? 2.0f : 1.0f));
         }
-        _anim.SetBool("defense", pi.defense);
+
+
 
         if (pi.lockOn) camcon.LockUnLock();
 
@@ -86,25 +89,35 @@ public class ActorController : MonoBehaviour
         }
         if (pi.roll) _anim.SetTrigger("roll");
         if (pi.jab) _anim.SetTrigger("jab");
-
-        if ((pi.attack || pi.leftAttack) && (CheckAnimatorState("ground") || CheckAnimatorStateTag("attack")) && _canAttack)
+        if (pi.tryCounterBack) am.sm.TryCounterBack();
+        if ((pi.attack || pi.leftAttack) && (CheckAnimatorState("ground") || CheckAnimatorStateTag("attackR") || CheckAnimatorStateTag("attackL")) && _canAttack)
         {
             if (pi.leftAttack) _anim.SetBool("R0L1", true);
             else _anim.SetBool("R0L1", false);
             _anim.SetTrigger("attack");
         }
 
-        if (CheckAnimatorState("ground") && _leftShield)
+
+
+
+
+        if (_leftShield)
         {
-            if(pi.defense)
+            if ((CheckAnimatorState("ground") || CheckAnimatorState("blocked"))) {
+                _anim.SetBool("defense", pi.defense);
                 _anim.SetLayerWeight(_anim.GetLayerIndex("Defense"), 1.0f);
-            else _anim.SetLayerWeight(_anim.GetLayerIndex("Defense"), 0f);
+            }
+            else
+            {
+                _anim.SetBool("defense", false);
+                _anim.SetLayerWeight(_anim.GetLayerIndex("Defense"), 0f);
+            }
         }
         else _anim.SetLayerWeight(_anim.GetLayerIndex("Defense"), 0f);
 
         if (camcon.lockState == false)
         {
-            if(pi.dMag > 0.01f)
+            if (pi.dMag > 0.01f)
             {
                 Vector3 targetForward = Vector3.Slerp(model.transform.forward, pi.dVec, 0.3f);
                 model.transform.forward = targetForward;
@@ -117,7 +130,7 @@ public class ActorController : MonoBehaviour
         }
         else
         {
-            if(!_trackDirection) model.transform.forward = transform.forward;
+            if (!_trackDirection) model.transform.forward = transform.forward;
             else
             {
                 model.transform.forward = _planarVector.normalized;
@@ -125,12 +138,12 @@ public class ActorController : MonoBehaviour
             if (!_lockplanar) _planarVector = pi.dVec * walkSpeed * (pi.run ? runSpeed : 1.0f);
         }
 
-            
+
     }
 
     private void FixedUpdate()
     {
-        
+
         _rigbody.position += _deltaPos;
         //_rigbody.position += _planarVector * Time.fixedDeltaTime;
         _rigbody.velocity = new Vector3(_planarVector.x, _rigbody.velocity.y, _planarVector.z) + _thrustVector;
@@ -138,13 +151,13 @@ public class ActorController : MonoBehaviour
         _deltaPos = Vector3.zero;
     }
 
-    private bool CheckAnimatorState(string state, string layer = "Base Layer")
+    public bool CheckAnimatorState(string state, string layer = "Base Layer")
     {
         int layerIndex = _anim.GetLayerIndex(layer);
         return _anim.GetCurrentAnimatorStateInfo(layerIndex).IsName(state);
     }
 
-    private bool CheckAnimatorStateTag(string tag, string layer = "Base Layer")
+    public bool CheckAnimatorStateTag(string tag, string layer = "Base Layer")
     {
         int layerIndex = _anim.GetLayerIndex(layer);
         return _anim.GetCurrentAnimatorStateInfo(layerIndex).IsTag(tag);
@@ -161,7 +174,7 @@ public class ActorController : MonoBehaviour
 
     public void OnJumpExit()
     {
-        
+
     }
 
     public void isOnGround()
@@ -223,6 +236,23 @@ public class ActorController : MonoBehaviour
         pi.inputEnabled = false;
     }
 
+    public void OnAttackExit()
+    {
+        model.SendMessage("WeaponDisable");
+    }
+
+    public void OnStunnedEnter()
+    {
+        pi.inputEnabled = false;
+        _planarVector = Vector3.zero;
+    }
+
+    public void OnCounterBackEnter()
+    {
+        pi.inputEnabled = false;
+        _planarVector = Vector3.zero;
+    }
+
     public void OnAttackUpdate()
     {
         //float currentWeight = _anim.GetLayerWeight(_anim.GetLayerIndex("Attack"));
@@ -233,12 +263,13 @@ public class ActorController : MonoBehaviour
 
     public void UpdateRootMotion(object deltaPos)
     {
-        if(CheckAnimatorState("attack1hC"))
+        if (CheckAnimatorState("attack1hC"))
         {
             _deltaPos += (Vector3)deltaPos;
         }
-        
+
     }
+
 
     public void OnHitEnter()
     {
@@ -246,6 +277,18 @@ public class ActorController : MonoBehaviour
         pi.inputEnabled = false;
 
     }
+
+    public void OnBlockedEnter()
+    {
+        pi.inputEnabled = false;
+    }
+
+    public void OnDieEnter()
+    {
+        pi.inputEnabled = false;
+        _planarVector = Vector3.zero;
+    }
+
 
     public void IssueTrigger(string triggerName)
     {

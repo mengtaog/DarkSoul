@@ -31,6 +31,7 @@ public abstract class IUserInput : MonoBehaviour
     public bool attack;
     public bool leftAttack;
     public bool lockOn;
+    public bool tryCounterBack;
 
     [Header("====== Output Signals ======")]
     public float dUp;

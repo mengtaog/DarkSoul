@@ -99,6 +99,7 @@ public class KeyboardInput : IUserInput
         leftAttack = Input.GetKeyDown(keyLeftAttck);
         defense = Input.GetKey(keyDefense);
         lockOn = Input.GetKeyDown(keyLockOn);
+        tryCounterBack = Input.GetKeyDown(keyDefense);
     }
 
     //private Vector2 SquareToCircle(Vector2 input)
